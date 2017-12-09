@@ -2,55 +2,25 @@
         <p> <img src="https://i.imgur.com/lBSqWgt.png"/> </p>
         <p><i><b>Moderation, fun, utility and much more! (Rewrite)</b></i></p>
 	<p> 
-		<a href="https://discord.gg/pmQSbAd"><img src="https://discordapp.com/api/guilds/345787308282478592/widget.png?style=banner2" alt="" /></a>
+		<a href="https://discord.gg/2B4UvKx"><img src="https://discordapp.com/api/guilds/376697605029101569/widget.png?style=banner2" alt="" /></a>
 	</p>
-	<p>	<img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="passing" /></a>
-		<img src="https://img.shields.io/badge/python-3.6-brightgreen.svg" alt="python 3.6" /></a>
-		<a href="https://github.com/Rapptz/discord.py"><img src="https://img.shields.io/badge/discord-py-orange.svg" alt="discord.py" /></a>
+	<p>	<img src="https://img.shields.io/badge/build-passing-brightgreen.svg?style=for-the-badge" alt="passing" /></a>
+		<img src="https://img.shields.io/badge/python-3.6-brightgreen.svg?style=for-the-badge" alt="python 3.6" /></a>
+		<a href="https://github.com/Rapptz/discord.py"><img src="https://img.shields.io/badge/discord-py-orange.svg?style=for-the-badge" alt="discord.py" /></a>
 	</p>
 </div> 
 
-## [Rewrite Branch](https://discordpy.readthedocs.io/en/rewrite/) 
-This branch of the selfbot runs on discord.py rewrite, the next major version of the library. The selfbot is being completely rewritten with better code and structure. This branch is still in development, so expect bugs. Only install it if you will contribute to its development, constantly update it and give feedback. Once the branch is complete, and discord.py rewrite becomes the master branch of the library, this branch will become the master branch. If you want to install a stable version of the selfbot, go to the `master` branch of this repository.
+## [Welcome](http://selfbot-py.tk) 
+This branch of the selfbot runs on discord.py rewrite, the next major version of the library. The selfbot has been completely rewritten with better code and structure. Head on to the website for documentation and easy to understand install guides: http://selfbot-py.tk
 
-## [Installation via Heroku](https://github.com/verixx/selfbot/wiki/heroku)
-There are two ways of using the bot, one way is to download it and install it on your computer, the other is to host for free 24/7 on a service called **Heroku**. No download is required, everything is done online. Read the installation guide [here](https://github.com/verixx/selfbot/wiki/Heroku) or watch the video tutorial [here](https://youtu.be/1c0fJ8KcHcM). Its possible to install the selfbot using your phone and it has been done before. If you have any questions, join the support discord server and we will be happy to help.
-
-## [Normal Installation](https://github.com/verixx/selfbot.py/wiki/Hosting-on-your-own-PC)
-You need the following to run the bot: (currently) 
-```py
-git+https://github.com/Rapptz/discord.py@rewrite
-lxml
-mtranslate
-colorthief
-sympy
-psutil
-emoji
-```
-Do `pip install -r path/to/requirements.txt` to install the requirements.
-## Setup
-
-Open a terminal in the directory of the bots location and type
-```
-$ python3 selfbot.py
-```
-On first start the launcher will run and you will need to input data. After that the bot will launch without setup neccessary.
-
-If you need to edit your token or prefix, navigate into the data folder and open `config.json` and change the values.
-```json
-{
-    "token": "your_token_here",
-    "prefix": "r.",
-    "first": true
-}
-```
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/verixx/selfbot.py/tree/rewrite)
 
 ## Features
 
 * Moderation commands
 * Global emoji commands
 * Complex embed commands
-* Miscellaneous commands
+* Miscellaneous commands 
 * Easy to make your own commands
 * Community Cogs *(coming soon, join [our discord](https://discord.gg/pmQSbAd) for updates)*
 
@@ -72,6 +42,6 @@ Currently available cogs:-
 
 Note: You **do not** have to add default cogs into `data/community_cogs.txt`.
 
-## Acknowledgements
+## Acknowledgements 
 
 > Eval and google commands by [Rapptz](https://github.com/Rapptz) from R.Danny

@@ -1,7 +1,7 @@
 '''
 MIT License
 
-Copyright (c) 2017 verixx
+Copyright (c) 2017 Grok
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ import asyncio
 import psutil
 import random
 import pip
+import json
 import os
 import io
 
@@ -39,7 +40,46 @@ class Information:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["ri","role"])
+    @commands.command(no_pm=True)
+    async def channels(self, ctx, serverid:int = None):
+        """Shows ALL channels, use wisely!"""
+
+        if serverid is None:
+            server = ctx.guild
+        else:
+            server = discord.utils.get(self.bot.guilds, id=serverid)
+            if server is None:
+                return await ctx.send('Server not found!')
+
+        e = discord.Embed()
+        e.color = await ctx.get_dominant_color()
+
+        voice = ''
+        text = ''
+        categories = ''
+
+        for channel in server.voice_channels:
+            voice += f'\U0001f508 {channel}\n'
+        for channel in server.categories:
+            categories += f'\U0001f4da {channel}\n'
+        for channel in server.text_channels:
+            text += f'\U0001f4dd {channel}\n'
+        
+        if len(server.text_channels) > 0:
+            e.add_field(name='Text Channels', value=f'```{text}```')
+        if len(server.categories) > 0:
+            e.add_field(name='Categories', value=f'```{categories}```')
+        if len(server.voice_channels) > 0:
+            e.add_field(name='Voice Channels', value=f'```{voice}```')
+
+        try:
+            await ctx.send(embed=e)
+        except discord.HTTPException:
+            em_list = await embedtobox.etb(e)
+            for page in em_list:
+                await ctx.send(page)
+
+    @commands.command(aliases=["ri","role"], no_pm=True)
     @commands.guild_only()
     async def roleinfo(self, ctx, *, role: discord.Role):
         '''Shows information about a role'''
@@ -48,8 +88,14 @@ class Information:
         since_created = (ctx.message.created_at - role.created_at).days
         role_created = role.created_at.strftime("%d %b %Y %H:%M")
         created_on = "{} ({} days ago!)".format(role_created, since_created)
+        members = ''
+        i = 0
+        for user in role.members:
+            members += f'{user.name}, '
+            i+=1
+            if i > 30:
+                break
 
-        users = len([x for x in guild.members if role in x.roles])
         if str(role.colour) == "#000000":
             colour = "default"
             color = ("#%06x" % random.randint(0, 0xFFFFFF))
@@ -60,13 +106,14 @@ class Information:
 
         em = discord.Embed(colour=color)
         em.set_author(name=role.name)
-        em.add_field(name="Users", value=users)
+        em.add_field(name="Users", value=len(role.members))
         em.add_field(name="Mentionable", value=role.mentionable)
         em.add_field(name="Hoist", value=role.hoist)
         em.add_field(name="Position", value=role.position)
         em.add_field(name="Managed", value=role.managed)
         em.add_field(name="Colour", value=colour)
         em.add_field(name='Creation Date', value=created_on)
+        em.add_field(name='Members', value=members[:-2], inline=False)
         em.set_footer(text=f'Role ID: {role.id}')
 
         await ctx.send(embed=em)
@@ -96,7 +143,7 @@ class Information:
             except discord.HTTPException:
                 await ctx.send(av)
 
-    @commands.command(aliases=['servericon'])
+    @commands.command(aliases=['servericon'], no_pm=True)
     async def serverlogo(self, ctx):
         '''Return the server's icon url.'''
         icon = ctx.guild.icon_url
@@ -119,7 +166,7 @@ class Information:
             except discord.HTTPException:
                 await ctx.send(icon)
 
-    @commands.command(aliases=['server','si','svi'])
+    @commands.command(aliases=['server','si','svi'], no_pm=True)
     @commands.guild_only()
     async def serverinfo(self, ctx, server_id : int=None):
         '''See information about the server.'''
@@ -152,8 +199,34 @@ class Information:
             for page in em_list:
                 await ctx.send(page)
 
+    @commands.command()
+    async def tags(self, ctx, *, text: str=None):
+        ''' Get useful selfbot tags & tutorials '''
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+        with open('data/tags.json', 'r') as f:
+            s = f.read()
+            tags = json.loads(s)
+        if text in tags:
+            await ctx.send(f'{tags[str(text)]}')
+        else:
+            p = f' {ctx.prefix}{ctx.invoked_with} '
+            usage = f'\n***AVAILABLE TAGS:***\n\n' \
+                    f'`1.`{p}heroku\n`2.`{p}change-token\n' \
+                    f'`3.`{p}hosting\n`4.`{p}rules-selfbot\n`5.`{p}tutorial\n' \
+                    f'`6.`{p}update\n`7.`{p}support-invite\n`8.`{p}support\n' \
+                    f'`9.`{p}android-token\n`10.`{p}android-heroku'
+            e = discord.Embed()
+            e.color = await ctx.get_dominant_color(url=ctx.message.author.avatar_url)
+            e.add_field(name='Tag not found!', value=usage)
+            try:
+                await ctx.send(embed=e, delete_after=15)
+            except Exception as e:
+                await ctx.send(f'```{e}```')
 
-    @commands.command(aliases=['ui'])
+    @commands.command(aliases=['ui'], no_pm=True)
     @commands.guild_only()
     async def userinfo(self, ctx, *, member : discord.Member=None):
         '''Get information about a member of a server'''
@@ -193,15 +266,9 @@ class Information:
     @commands.command(aliases=['bot', 'info'])
     async def about(self, ctx):
         '''See information about the selfbot and latest changes.'''
-        cmd = r'git show -s HEAD~3..HEAD --format="[{}](https://github.com/verixx/selfbot/commit/%H) %s (%cr)"'
-        if os.name == 'posix':
-            cmd = cmd.format(r'\`%h\`')
-        else:
-            cmd = cmd.format(r'`%h`')
 
-        revision = '\n'.join(os.popen(cmd).read().strip()  .splitlines()[:3])
         embed = discord.Embed()
-        embed.url = 'https://discord.gg/pmQSbAd'
+        embed.url = 'https://selfbot-py.tk'
         embed.colour = await ctx.get_dominant_color(ctx.author.avatar_url)
 
         embed.set_author(name='selfbot.py', icon_url=ctx.author.avatar_url)
@@ -230,9 +297,13 @@ class Information:
         if days:
             fmt = '{d}d ' + fmt
         uptime = fmt.format(d=days, h=hours, m=minutes, s=seconds)
-        if revision:
-            embed.add_field(name='Latest Changes', value=revision)
-        embed.add_field(name='Author', value='verixx#7220')
+
+        github = '[Click Here](https://github.com/kyb3r/selfbot.py/)'
+        server = '[Click Here](https://discord.gg/2B4UvKx)'
+        website = '[selfbot-py.tk](http://selfbot-py.tk/)'
+
+
+        embed.add_field(name='Author', value='kyb3r#7220')
         embed.add_field(name='Uptime', value=uptime)
         embed.add_field(name='Guilds', value=len(self.bot.guilds))
         embed.add_field(name='Members', value=f'{total_unique} total\n{total_online} online')
@@ -240,6 +311,9 @@ class Information:
         memory_usage = self.bot.process.memory_full_info().uss / 1024**2
         cpu_usage = self.bot.process.cpu_percent() / psutil.cpu_count()
         embed.add_field(name='Process', value=f'{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU')
+        embed.add_field(name='Github', value=github)
+        embed.add_field(name='Discord', value=server)
+        embed.add_field(name='Website', value=website)
         embed.set_footer(text=f'Powered by discord.py {discord.__version__}')
         await ctx.send(embed=embed)
 

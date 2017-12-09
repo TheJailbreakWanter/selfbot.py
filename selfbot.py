@@ -1,7 +1,7 @@
 '''
 MIT License
 
-Copyright (c) 2017 verixx
+Copyright (c) 2017 Grok
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+SOFTWARE. 
 '''
 
 import discord
@@ -41,10 +41,9 @@ import textwrap
 from PIL import Image
 import io
 
-
 class Selfbot(commands.Bot):
     '''
-    Custom Client for selfbot.py - Made by verix#7220
+    Custom Client for selfbot.py - Made by verix#7200
     '''
     _mentions_transforms = {
         '@everyone': '@\u200beveryone',
@@ -58,6 +57,7 @@ class Selfbot(commands.Bot):
         self.formatter = EmbedHelp()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.process = psutil.Process()
+        self.prefix = None
         self._extensions = [x.replace('.py', '') for x in os.listdir('cogs') if x.endswith('.py')]
         self.last_message = None
         self.messages_sent = 0
@@ -65,6 +65,8 @@ class Selfbot(commands.Bot):
         self.remove_command('help')
         self.add_command(self.ping)
         self.load_extensions()
+        self.add_command(self.load)
+        self.add_command(self.reloadcog)
         self.load_community_extensions()
 
     def load_extensions(self, cogs=None, path='cogs.'):
@@ -81,7 +83,7 @@ class Selfbot(commands.Bot):
         '''Loads up community extensions.'''
         with open('data/community_cogs.txt') as fp:
             to_load = fp.read().splitlines()
-        self.load_extensions(to_load, 'cogs.community')
+        self.load_extensions(to_load, 'cogs.community.')
 
     @property
     def token(self):
@@ -101,6 +103,9 @@ class Selfbot(commands.Bot):
         with open('data/config.json') as f:
             prefix = json.load(f).get('PREFIX')
         return os.environ.get('PREFIX') or prefix or 'r.'
+
+    def restart(self):
+        os.execv(sys.executable, ['python'] + sys.argv)
 
     @staticmethod
     def run_wizard():
@@ -139,6 +144,10 @@ class Selfbot(commands.Bot):
         if not hasattr(self, 'uptime'):
             self.uptime = datetime.datetime.utcnow()
         print(textwrap.dedent(f'''
+        Use this at your own risk,
+        dont do anything stupid, 
+        and when you get banned,
+        dont blame it at me.
         ---------------
         Client is ready!
         ---------------
@@ -146,6 +155,8 @@ class Selfbot(commands.Bot):
         ---------------
         Logged in as: {self.user}
         User ID: {self.user.id}
+        ---------------
+        Current Version: 1.0.0
         ---------------
         '''))
         
@@ -169,6 +180,17 @@ class Selfbot(commands.Bot):
         self.messages_sent += 1
         self.last_message = time.time()
         await self.process_commands(message)
+    
+    async def on_member_update(self, before, after):
+        if before != self.user: return
+        if before.nick == after.nick: return
+        with open('data/options.json') as f:
+            options = json.load(f)
+        if before.guild.id in options['NICKPROTECT']:
+            try:
+                await after.edit(nick = None)
+            except discord.Forbidden:
+                pass
 
     def get_server(self, id):
         return discord.utils.get(self.guilds, id=id)
@@ -186,6 +208,30 @@ class Selfbot(commands.Bot):
             em_list = await embedtobox.etb(emb)
             for page in em_list:
                 await ctx.send(page)
+
+    @commands.command(aliases=["loadcog"])
+    async def load(self, ctx, *, cog: str):
+        """ Load an unloaded cog 
+        For example: {p}load mod"""
+        cog = f"cogs.{cog}"
+        await ctx.send(f"Preparing to load {cog}...", delete_after=5)
+        try:
+            self.load_extension(cog)
+            await ctx.send(f"{cog} cog was loaded successfully!", delete_after=5)
+        except Exception as e:
+            await ctx.send(f"```py\nError loading {cog}:\n\n{e}\n```", delete_after=5)
+
+    @commands.command(aliases=["reload"])
+    async def reloadcog(self, ctx, *, cog: str):
+        """ Reload any cog """
+        cog = f"cogs.{cog}"
+        await ctx.send(f"Preparing to reload {cog}...", delete_after=5)
+        self.unload_extension(cog)
+        try:
+            self.load_extension(cog)
+            await ctx.send(f"{cog} cog was reloaded successfully!", delete_after=5)
+        except Exception as e:
+            await ctx.send(f"```py\nError loading {cog}:\n\n{e}\n```", delete_after=5)
 
 
 if __name__ == '__main__':
